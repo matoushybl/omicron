@@ -107,6 +107,12 @@ use uuid::Uuid;
 
 use illumos_utils::zone::Zones;
 
+// Local stand-in for the fleet-wide
+// `system_networking_settings.external_jumbo_frames_opt_in_enabled`
+// setting, applied to external-facing service-zone OPTE ports (see the
+// TODO(RFD 689) at the `PortCreateParams` construction site).
+const LOCAL_JUMBO_OPT_IN: &str = "/etc/oxide/jumbo-service-ports";
+
 // These are all the same binary. They just reside at different paths.
 const CLICKHOUSE_SERVER_BINARY: &str =
     "/opt/oxide/clickhouse_server/clickhouse";
@@ -969,10 +975,21 @@ impl ServiceManager {
                 // BoundaryNtp) are brought up with `EXTERNAL_JUMBO_FRAMES_MTU`
                 // when the operator has enabled the opt-in.
                 //
-                // For now, services always use the default MTU. The
-                // per-instance jumbo opt-in (the primary user-facing feature
-                // from RFD 689) is fully wired through `instance_ensure_registered`.
-                mtu: None,
+                // Until that plumbing exists, the local operator opt-in
+                // marker file below stands in for the fleet setting
+                // (existence == opt-in enabled). Absent (the default),
+                // behavior is unchanged: services use the default MTU.
+                //
+                // NOTE: enabling this is only meaningful when the external
+                // link family (underlay beneath the softnpu uplink) is also
+                // raised to jumbo, or egress frames will be dropped.
+                mtu: if std::path::Path::new(LOCAL_JUMBO_OPT_IN)
+                    .exists()
+                {
+                    Some(omicron_common::address::EXTERNAL_JUMBO_FRAMES_MTU)
+                } else {
+                    None
+                },
             })
             .map_err(|err| Error::ServicePortCreation {
                 service: zone_kind,
@@ -3158,7 +3175,12 @@ impl ServiceManager {
                     let softnpu_filesystem = zone::Fs {
                         ty: "lofs".to_string(),
                         dir: "/opt/softnpu/stuff".to_string(),
-                        special: "/var/run/softnpu/sidecar".to_string(),
+                        // Persistent (rpool-backed) runtime dir so the mount
+                        // source survives host reboots; the softnpu zone and
+                        // this zone share the dir (UDS sockets, artifacts).
+                        // Was /var/run/softnpu/sidecar (tmpfs), which made
+                        // zone boot verification fail after every reboot.
+                        special: "/var/softnpu/sidecar".to_string(),
                         ..Default::default()
                     };
                     filesystems.push(softnpu_filesystem);
