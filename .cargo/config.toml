@@ -66,7 +66,8 @@ rustflags = "--cfg tokio_unstable"
 rustflags = [
     "-C", "link-arg=-Wl,-znocompstrtab,-R/usr/platform/oxide/lib/amd64",
     # enable the `tokio-unstable` config for `tokio-dtrace` probes
-    "--cfg", "tokio_unstable"
+    "--cfg", "tokio_unstable",
+    "--cfg", "svcadm_autoclear"
 ]
 
 # Set up `cargo xtask`.

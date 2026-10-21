@@ -89,47 +89,54 @@ vdevs = [
   "/vdevpool/m2_1.vdev",
 ]
 
-# Real 1TB U.2 disks. A non-gimlet cannot auto-detect disks, so these are
-# injected as if physically observed.
+# 4 x 0.9TB Intel drives + 1x 4TB SN700, declared against the live host.
+# The 300GB disks (c2t1d0 = rpool boot, c2t3d0 = detached/empty) are deliberately
+# NOT declared here; data on the 0.9TB drives and the 4TB drive can be wiped.
+#
+# Identity placeholders below (Intel model/serial) are NOT verified from this
+# session — no disk-identity tool exists on this box. Replace them with the
+# real values before trusting the inventory. Paths, slots, variants, and the
+# SN700 identity are verified against the live host.
 [[external_disks.disks]]
-slot = 0
+pcie_slot = 0
 variant = "U2"
 is_boot_disk = false
-paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@0,1", dev_path = "/dev/dsk/c1t0d1" }
-identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF004104ET960" }
-firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+paths = { devfs_path = "/devices/pci@0,0/pci1028,600@11,4/disk@0,0", dev_path = "/dev/dsk/c2t0d0" }
+identity = { vendor = "INTEL", model = "PLACEHOLDER-INTEL-90TB", serial = "PLACEHOLDER-SERIAL-0" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
 
 [[external_disks.disks]]
-slot = 1
+pcie_slot = 1
 variant = "U2"
 is_boot_disk = false
-paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@1,1", dev_path = "/dev/dsk/c1t1d1" }
-identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF004104ER960" }
-firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+paths = { devfs_path = "/devices/pci@0,0/pci1028,600@11,4/disk@2,0", dev_path = "/dev/dsk/c2t2d0" }
+identity = { vendor = "INTEL", model = "PLACEHOLDER-INTEL-90TB", serial = "PLACEHOLDER-SERIAL-1" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
 
 [[external_disks.disks]]
-slot = 2
+pcie_slot = 2
 variant = "U2"
 is_boot_disk = false
-paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@2,1", dev_path = "/dev/dsk/c1t2d1" }
-identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "PHYF907201XM960" }
-firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+paths = { devfs_path = "/devices/pci@0,0/pci1028,600@1f,2/disk@0,0", dev_path = "/dev/dsk/c4t0d0" }
+identity = { vendor = "INTEL", model = "PLACEHOLDER-INTEL-90TB", serial = "PLACEHOLDER-SERIAL-2" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
 
 [[external_disks.disks]]
-slot = 3
+pcie_slot = 3
 variant = "U2"
 is_boot_disk = false
-paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@3,1", dev_path = "/dev/dsk/c1t3d1" }
-identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF00510374960" }
-firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+paths = { devfs_path = "/devices/pci@0,0/pci1028,600@1f,2/disk@2,0", dev_path = "/dev/dsk/c4t2d0" }
+identity = { vendor = "INTEL", model = "PLACEHOLDER-INTEL-90TB", serial = "PLACEHOLDER-SERIAL-3" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
 
 [[external_disks.disks]]
-slot = 4
+pcie_slot = 4
 variant = "U2"
 is_boot_disk = false
-paths = { devfs_path = "/devices/pci@0,0/pci8086,6f0a@3,2/pci15b7,5006@0/blkdev@w001B448B405E24A8,0", dev_path = "/dev/dsk/c2t001B448B405E24A8d0" }
+paths = { devfs_path = "/devices/pci@76,0/pci8086,6f04@2/pci15b7,5006@0/blkdev@w001B448B405E24A8,0", dev_path = "/dev/dsk/c9t001B448B405E24A8d0" }
 identity = { vendor = "WD", model = "Red SN700 4000GB", serial = "24305E800168" }
 firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
+
 [data_links]
 kind = "virtual"
 devices = ["net0", "net1"]
