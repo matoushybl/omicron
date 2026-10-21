@@ -184,7 +184,7 @@ pub const MAX_SSH_KEYS_PER_INSTANCE: u32 = 100;
 ///
 /// See oxidecomputer/omicron#7875 for the 250G determination.
 pub const CONTROL_PLANE_STORAGE_BUFFER: ByteCount =
-    ByteCount::from_gibibytes_u32(250);
+    ByteCount::from_gibibytes_u32(50);
 
 /// Name of the Debug Dropbox producer for Reconfiguator
 pub const DEBUG_DROPBOX_PRODUCER_RECONFIGURATOR: &str = "reconfigurator";
