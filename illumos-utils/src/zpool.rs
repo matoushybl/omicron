@@ -209,10 +209,36 @@ impl Zpool {
     }
 
     pub async fn import(name: &ZpoolName) -> Result<(), Error> {
+        Self::import_impl(name, None).await
+    }
+
+    /// Like [`Self::import`], but also passes `-d <search_dir>` so `zpool`
+    /// searches `search_dir` for the pool's vdevs.
+    ///
+    /// This is required for synthetic/file-backed pools whose vdevs live
+    /// outside zpool's default device search path -- e.g. the file-backed
+    /// `oxi_` pools under `/vdevpool` on a non-Gimlet sled. Without the extra
+    /// search directory the by-name import fails once the cachefile entry is
+    /// gone (e.g. after a clean shutdown), which parks sled-agent in
+    /// maintenance.
+    pub async fn import_with_search_dir(
+        name: &ZpoolName,
+        search_dir: &Utf8Path,
+    ) -> Result<(), Error> {
+        Self::import_impl(name, Some(search_dir)).await
+    }
+
+    async fn import_impl(
+        name: &ZpoolName,
+        search_dir: Option<&Utf8Path>,
+    ) -> Result<(), Error> {
         let mut cmd = Command::new(PFEXEC);
         cmd.env_clear();
         cmd.env("LC_ALL", "C.UTF-8");
         cmd.arg(ZPOOL).arg("import").arg("-f");
+        if let Some(search_dir) = search_dir {
+            cmd.arg("-d").arg(search_dir);
+        }
         cmd.arg(&name.to_string());
         match execute_async(&mut cmd).await {
             Ok(_) => Ok(()),
