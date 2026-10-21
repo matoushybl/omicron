@@ -387,19 +387,19 @@ fn initialize_softnpu_zone(
 
     // Configure upstream network gateway ARP entry
     println!("configuring SoftNPU ARP entry");
-    run_scadm_command(vec!["add-arp-entry", &gateway_ip, &gateway_mac])?;
+    run_scadm_with_retry(vec!["add-arp-entry", &gateway_ip, &gateway_mac])?;
 
     match (pxa.start, pxa.end) {
         (Some(start), Some(end)) => {
             println!("configuring SoftNPU proxy ARP");
-            run_scadm_command(vec!["add-proxy-arp", &start, &end, &pxa_mac])?;
+            run_scadm_with_retry(vec!["add-proxy-arp", &start, &end, &pxa_mac])?;
         }
         _ => {
             eprintln!("{PXA_WARNING}");
         }
     }
 
-    let output = run_scadm_command(vec!["dump-state"])?;
+    let output = run_scadm_with_retry(vec!["dump-state"])?;
     let stdout = String::from_utf8(output.stdout)
         .context("Invalid dump-state output")?;
     println!("SoftNPU state:");
@@ -408,6 +408,42 @@ fn initialize_softnpu_zone(
     }
 
     Ok(())
+}
+
+/// Run an scadm command, retrying while the softnpu management socket is not
+/// up yet.
+///
+/// `xtask create` races the sidecar zone: `initialize_softnpu_zone` runs right
+/// after the zone is created, but `softnpu.bin` may not have opened its
+/// management socket yet. scadm then exits with an error (and panics), which
+/// used to abort the whole create. Wait for the socket instead of failing.
+fn run_scadm_with_retry(args: Vec<&str>) -> Result<Output> {
+    const ATTEMPTS: usize = 120;
+    for attempt in 0..ATTEMPTS {
+        match run_scadm_command(args.clone()) {
+            Ok(output) => return Ok(output),
+            Err(e) => {
+                let msg = format!("{e:#}");
+                let not_ready = msg.contains("Is softnpu running")
+                    || msg.contains("nothing is listening")
+                    || msg.contains("Destination address required");
+                if !not_ready || attempt + 1 == ATTEMPTS {
+                    return Err(e).context(
+                        "failed to program the softnpu zone; is softnpu up?",
+                    );
+                }
+                if attempt % 5 == 0 {
+                    println!(
+                        "waiting for the softnpu management socket \
+                         (attempt {}/{ATTEMPTS})...",
+                        attempt + 1
+                    );
+                }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        }
+    }
+    unreachable!("the retry loop always returns")
 }
 
 fn run_scadm_command(args: Vec<&str>) -> Result<Output> {
@@ -463,7 +499,10 @@ fn get_gateway_mac(
                 );
                 let mut cmd = Command::new(PING);
                 cmd.arg(&gateway_ip);
-                execute(cmd)?;
+                // A ping failure is expected when the gateway does not answer
+                // ICMP (e.g. a phantom transit address); we only care about
+                // the resulting ARP cache entry.
+                let _ = execute(cmd);
                 std::thread::sleep(std::time::Duration::from_secs(1));
             }
 
