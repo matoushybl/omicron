@@ -206,4 +206,37 @@ impl Sensors {
             }
         }
     }
+
+    /// Applies a batch of live sensor data points, replacing `last_data`
+    /// of every sensor whose (component, name, kind) matches. Returns how
+    /// many sensors were updated.
+    pub(crate) fn apply_updates(
+        &mut self,
+        updates: impl IntoIterator<Item = crate::server::SensorDataPoint>,
+    ) -> usize {
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+        let mut updated = 0;
+        for update in updates {
+            let Some(ids) = self.by_component.get(&update.component) else {
+                continue;
+            };
+            for &id in ids {
+                let Some(sensor) = self.sensors.get_mut(id as usize) else {
+                    continue;
+                };
+                if sensor.def.name != update.name
+                    || sensor.def.kind != update.kind
+                {
+                    continue;
+                }
+                sensor.state.last_data =
+                    Some(LastData { timestamp, value: update.value });
+                updated += 1;
+            }
+        }
+        updated
+    }
 }
