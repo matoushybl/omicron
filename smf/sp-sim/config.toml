@@ -406,6 +406,45 @@ status_input = 0x00
 status_mfr_specific = 0x00
 status_fans_1_2 = 0x00
 
+# eitri lab: real host BMC telemetry bridge (see sp-sim/src/redfish.rs).
+# Component IDs that are not PSU slots are ignored by the Nexus PSU
+# inventory, so this component is safe to add.
+[[simulated_sps.psc.components]]
+id = "MON0"
+device = "bmc-monitor"
+description = "Real host BMC telemetry (Redfish bridge)"
+presence = "Present"
+sensors = [
+    { name = "bmc_inlet_temp", kind = "Temperature", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_cpu1_temp", kind = "Temperature", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_cpu2_temp", kind = "Temperature", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan1a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan1b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan2a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan2b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan3a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan3b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan4a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan4b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan5a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan5b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan6a", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_fan6b", kind = "Speed", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_total_power", kind = "Power", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_psu1_input", kind = "Voltage", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_psu1_in_power", kind = "Power", last_data.value = 0.0, last_data.timestamp = 1234 },
+    { name = "bmc_psu1_out_power", kind = "Power", last_data.value = 0.0, last_data.timestamp = 1234 },
+]
+
+# eitri lab: poll the real iDRAC and push its readings into the sensors
+# above (and into PSU0's InputVoltage rail entries).
+[real_sensor_source]
+base_url = "https://192.168.1.250"
+username = "root"
+password = "calvin"
+poll_interval_secs = 30
+insecure_tls = true
+
 [log]
 # Show log messages of this level and more severe
 level = "debug"

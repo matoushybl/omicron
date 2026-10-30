@@ -254,6 +254,18 @@ impl fmt::Display for SimRackTaskName {
     }
 }
 
+impl<H> Handle<H> {
+    /// Returns the sender for pushing commands into this SP's UDP task.
+    ///
+    /// The sender can be cloned freely; the UdpTask keeps running as long
+    /// as any sender to it exists.
+    pub(crate) fn command_sender(
+        &self,
+    ) -> &mpsc::UnboundedSender<Command> {
+        &self.commands
+    }
+}
+
 fn port_index(port: SpPort) -> usize {
     match port {
         SpPort::One => 0,

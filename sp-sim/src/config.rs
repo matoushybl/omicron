@@ -277,6 +277,30 @@ pub struct SimulatedSpsConfig {
     pub psc: Vec<PscConfig>,
 }
 
+/// Configuration for a live ("real") sensor data source.
+///
+/// When present in the sp-sim config, the simulator periodically polls the
+/// BMC's Redfish endpoints and pushes the real readings it finds into the
+/// simulated SPs' sensors (replacing their configured static values).
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RealSensorSource {
+    /// Base URL of the Redfish service, e.g. "https://192.168.1.250".
+    pub base_url: String,
+    /// Redfish user name.
+    pub username: String,
+    /// Redfish password. Mutually exclusive with `password_file`.
+    pub password: Option<String>,
+    /// Path to a file containing the Redfish password.
+    pub password_file: Option<String>,
+    /// Chassis ID to read sensors from (Dell default: "System.Embedded.1").
+    pub chassis_id: Option<String>,
+    /// Poll interval in seconds (default 30, minimum 5).
+    pub poll_interval_secs: Option<u64>,
+    /// Accept the BMC's (typically self-signed) TLS certificate. Defaults to
+    /// true: lab BMCs rarely have certificates signed by anything sane.
+    pub insecure_tls: Option<bool>,
+}
+
 /// Configuration for a sp-sim
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Config {
@@ -284,6 +308,9 @@ pub struct Config {
     pub simulated_sps: SimulatedSpsConfig,
     /// Server-wide logging configuration.
     pub log: ConfigLogging,
+    /// Optional live sensor data source (a real BMC via Redfish).
+    #[serde(default)]
+    pub real_sensor_source: Option<RealSensorSource>,
 }
 
 /// Configuration for a component's sensor readings.

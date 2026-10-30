@@ -149,6 +149,13 @@ impl SimulatedSp for Psc {
 }
 
 impl Psc {
+    /// Returns the sender for pushing live sensor data into this PSC.
+    pub(crate) fn sensor_update_sender(
+        &self,
+    ) -> tokio::sync::mpsc::UnboundedSender<crate::server::Command> {
+        self.sp.command_sender().clone()
+    }
+
     pub(crate) async fn spawn(
         psc: &PscConfig,
         index: usize,
@@ -1006,5 +1013,12 @@ impl SimSpHandler for Handler {
 
     fn power_state_changes(&self) -> &Arc<AtomicUsize> {
         &self.power_state_changes
+    }
+
+    fn update_sensors(
+        &mut self,
+        updates: Vec<crate::server::SensorDataPoint>,
+    ) {
+        self.sensors.apply_updates(updates);
     }
 }
