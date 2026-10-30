@@ -187,6 +187,18 @@ impl<H> Handle<H> {
     }
 }
 
+impl<H> Handle<H> {
+    /// Returns the sender for pushing commands into this SP's UDP task.
+    ///
+    /// The sender can be cloned freely; the UdpTask keeps running as long
+    /// as any sender to it exists.
+    pub(crate) fn command_sender(
+        &self,
+    ) -> &mpsc::UnboundedSender<Command> {
+        &self.commands
+    }
+}
+
 impl<H> Drop for Handle<H> {
     fn drop(&mut self) {
         if let Some(udp_task) = self.udp_task.as_ref() {

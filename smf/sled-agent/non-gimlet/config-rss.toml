@@ -33,7 +33,7 @@ external_dns_zone_name = "oxide.test"
 # the DNS domain delegated to the rack by the customer. Each of these addresses
 # must be contained in one of the "internal services" IP Pool ranges listed
 # below.
-external_dns_ips = [ "192.168.200.20", "192.168.200.21" ]
+external_dns_ips = [ "192.168.1.100", "192.168.1.101" ]
 
 # Initial TLS certificates for the external API
 #
@@ -71,7 +71,7 @@ external_certificates = []
 [[service_ip_pools]]
 name = "oxide-service-pool-v4"
 description = "IPv4 IP Pool for Oxide Services"
-ranges = [ { first = "192.168.200.20", last = "192.168.200.29" } ]
+ranges = [ { first = "192.168.1.100", last = "192.168.1.119" } ]
 
 # TODO - this configuration is subject to change going forward. Ultimately these
 # parameters should be provided to the control plane via wicket, but we need to
@@ -97,17 +97,17 @@ rack_subnet = "fd00:1122:3344:0100::/56"
 infra_ip_first = "192.168.1.120"
 infra_ip_last = "192.168.1.120"
 
-# Static-uplink mode: no BGP on the rack. The upstream router holds a static
-# route for the rack's prefix (192.168.200.0/24) pointing at our uplink address.
+# PC mode: no BGP on the rack, and no route for a separate rack prefix —
+# services live on the same 192.168.1.0/24 as everything else.
 bgp = []
 
 # You can configure multiple uplinks by repeating the following stanza
 [[rack_network_config.ports]]
-# Static default route via the upstream (transit router) — mgd applies this,
-# so the rack has egress before anything else needs to converge.
-routes = [{nexthop = "192.168.201.1", destination = "0.0.0.0/0"}]
-# Numbered /30 transit address on the uplink.
-addresses = [{address = {type = "static", ip_net = "192.168.201.2/30"}}]
+# Static default route via the house LAN gateway — mgd applies this, so the
+# rack has egress before anything else needs to converge.
+routes = [{nexthop = "192.168.1.199", destination = "0.0.0.0/0"}]
+# Uplink address on the house LAN (the infra address above).
+addresses = [{address = {type = "static", ip_net = "192.168.1.120/24"}}]
 # Name of the uplink port.  This should always be "qsfp0" when using softnpu.
 port = "qsfp0"
 # The speed of this port.

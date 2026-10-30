@@ -38,6 +38,9 @@ nix.workspace = true
 uuid.workspace = true
 zerocopy.workspace = true
 slog-error-chain.workspace = true
+# Live sensor data source (BMC Redfish bridge)
+reqwest = { workspace = true, features = ["rustls"] }
+serde_json.workspace = true
 
 [[bin]]
 name = "sp-sim"
