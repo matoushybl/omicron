@@ -408,7 +408,17 @@ pub async fn ensure_zpool_exists(
             zpool_name
         }
     };
-    Zpool::import(&zpool_name).await.map_err(|e| {
+    // Import by name, additionally searching the directory that contains the
+    // pool's vdev. Synthetic (file-backed) pools -- e.g. the `oxi_` pools on a
+    // non-Gimlet sled, whose vdevs live under `/vdevpool` -- are outside
+    // zpool's default device search path, so a by-name import fails once the
+    // cachefile entry is gone (e.g. after a clean shutdown). Searching the
+    // vdev's own directory makes the import robust across reboots.
+    let import_result = match zpool_path.parent() {
+        Some(dir) => Zpool::import_with_search_dir(&zpool_name, dir).await,
+        None => Zpool::import(&zpool_name).await,
+    };
+    import_result.map_err(|e| {
         warn!(log, "Failed to import zpool {zpool_name}"; &e);
         PooledDiskError::ZpoolImport(e)
     })?;
