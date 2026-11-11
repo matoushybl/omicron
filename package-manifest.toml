@@ -817,10 +817,10 @@ only_for_targets.image = "standard"
 # 2. Copy dendrite.tar.gz from dendrite/out to omicron/out/dendrite-softnpu.tar.gz
 # 3. Change the below `source.type` key to `"manual"` and comment out or remove
 # the other `source.*` keys.
-source.type = "prebuilt"
-source.repo = "dendrite"
-source.commit = "e577a94678bf0a8d64d719acd3e19edd965f66a3"
-source.sha256 = "319d1f233b7f7df9d8c4d156a6236f7f1f9012cc95c03b0816bb959d7002c28d"
+source.type = "manual"
+# source.repo = "dendrite"
+# source.commit = "e577a94678bf0a8d64d719acd3e19edd965f66a3"
+# source.sha256 = "319d1f233b7f7df9d8c4d156a6236f7f1f9012cc95c03b0816bb959d7002c28d"
 output.type = "zone"
 output.intermediate_only = true
 

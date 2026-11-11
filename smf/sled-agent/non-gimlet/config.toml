@@ -27,7 +27,7 @@ deployment = { kind = "standalone", front_port_count = 1, rear_port_count = 1 }
 
 # Setting this to true causes sled-agent to always report that its time is
 # in-sync, rather than querying its NTP zone.
-skip_timesync = false
+skip_timesync = true
 
 # The amount of memory held back for services which exist between zero and one
 # times on this system. As this is a non-Gimlet target, it is likely that
@@ -89,36 +89,58 @@ swap_device_size_gb = 64
 # be passed into the `oxz_switch` zone for this purpose.  You can skip this if
 # you're deploying a single-sled system and just leave the single tfportrear
 # as-is.
-switch_zone_maghemite_links = ["tfportrear0_0"]
+switch_zone_maghemite_links = ["tfportrear0_0", "tfportqsfp0_0"]
 
-# For testing purposes, a file-backed virtual disk can be manually created with
-# the following:
-#
-# # truncate -s 10GB <name>.vdev
-#
-# Note that you'll need to create one such file for each disk below.
-# `cargo xtask virtual-hardware create` does this for you.
-#
-# These paths have the prefix of either "u2" or "m2", followed by an underscore,
-# followed by a string that is embedded into their fake serial values.
 [external_disks]
 kind = "hardcoded"
+
+# Internal/boot pool stays file-backed; the vdev files live on the 300GB disk.
 vdevs = [
-  "m2_0.vdev",
-  "m2_1.vdev",
-
-  "u2_0.vdev",
-  "u2_1.vdev",
-  "u2_2.vdev",
-  "u2_3.vdev",
-  "u2_4.vdev",
-  "u2_5.vdev",
-  "u2_6.vdev",
-  "u2_7.vdev",
-  "u2_8.vdev",
+  "/vdevpool/m2_0.vdev",
+  "/vdevpool/m2_1.vdev",
 ]
-disks = []
 
+# Real 1TB U.2 disks. A non-gimlet cannot auto-detect disks, so these are
+# injected as if physically observed.
+[[external_disks.disks]]
+slot = 0
+variant = "U2"
+is_boot_disk = false
+paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@0,1", dev_path = "/dev/dsk/c1t0d1" }
+identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF004104ET960" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+
+[[external_disks.disks]]
+slot = 1
+variant = "U2"
+is_boot_disk = false
+paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@1,1", dev_path = "/dev/dsk/c1t1d1" }
+identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF004104ER960" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+
+[[external_disks.disks]]
+slot = 2
+variant = "U2"
+is_boot_disk = false
+paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@2,1", dev_path = "/dev/dsk/c1t2d1" }
+identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "PHYF907201XM960" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+
+[[external_disks.disks]]
+slot = 3
+variant = "U2"
+is_boot_disk = false
+paths = { devfs_path = "/devices/pci@0,0/pci8086,6f02@1/pci1028,1f49@0/sd@3,1", dev_path = "/dev/dsk/c1t3d1" }
+identity = { vendor = "ATA", model = "INTEL SSDSC2KB96", serial = "BTYF00510374960" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots =1, slot_firmware_versions = ["OXIDE"] }
+
+[[external_disks.disks]]
+slot = 4
+variant = "U2"
+is_boot_disk = false
+paths = { devfs_path = "/devices/pci@0,0/pci8086,6f0a@3,2/pci15b7,5006@0/blkdev@w001B448B405E24A8,0", dev_path = "/dev/dsk/c2t001B448B405E24A8d0" }
+identity = { vendor = "WD", model = "Red SN700 4000GB", serial = "24305E800168" }
+firmware = { active_slot = 1, next_active_slot = 1, slot1_read_only = true, number_of_slots = 1, slot_firmware_versions = ["OXIDE"] }
 [data_links]
 kind = "virtual"
 devices = ["net0", "net1"]

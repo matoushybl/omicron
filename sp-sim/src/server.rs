@@ -220,6 +220,20 @@ pub(crate) trait SimSpHandler: SpHandler {
     /// The simulated handler increments this every time the power state
     /// changes.
     fn power_state_changes(&self) -> &Arc<AtomicUsize>;
+
+    /// Replaces the last-read data for every sensor whose
+    /// (component, name, kind) matches a data point in `updates`, pushing
+    /// live telemetry (e.g. from a real BMC) into the simulated sensors.
+    fn update_sensors(&mut self, updates: Vec<SensorDataPoint>);
+}
+
+/// One live sensor data point.
+#[derive(Debug, Clone)]
+pub(crate) struct SensorDataPoint {
+    pub component: gateway_messages::SpComponent,
+    pub name: String,
+    pub kind: gateway_messages::measurement::MeasurementKind,
+    pub value: f32,
 }
 
 /// Commands sent from a simulated SP's handle to its [`UdpTask`].
@@ -228,6 +242,7 @@ pub(crate) enum Command {
     SetResponsiveness(Responsiveness, oneshot::Sender<Ack>),
     SetThrottler(Option<mpsc::UnboundedReceiver<usize>>, oneshot::Sender<Ack>),
     Ereport(ereport::Command),
+    UpdateSensors(Vec<SensorDataPoint>),
 }
 
 #[derive(Debug)]
@@ -373,6 +388,9 @@ where
                                 .map_err(|_| "receiving half died").unwrap();
                         }
                         Command::Ereport(cmd) => self.ereport_state.handle_command(cmd),
+                        Command::UpdateSensors(updates) => {
+                            self.handler.lock().await.update_sensors(updates);
+                        }
                     }
                 }
             }
