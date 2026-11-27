@@ -1080,6 +1080,13 @@ impl SimSpHandler for Handler {
     fn power_state_changes(&self) -> &Arc<AtomicUsize> {
         &self.power_state_changes
     }
+
+    fn update_sensors(
+        &mut self,
+        updates: Vec<crate::server::SensorDataPoint>,
+    ) {
+        self.sensors.apply_updates(updates);
+    }
 }
 
 struct FakeIgnition {

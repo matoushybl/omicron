@@ -9,6 +9,7 @@ mod gimlet;
 mod helpers;
 mod pmbus_rails;
 mod psc;
+mod redfish;
 mod sensors;
 mod server;
 mod sidecar;
@@ -205,6 +206,14 @@ impl SimRack {
                 )
                 .await?,
             );
+        }
+
+        // If a live sensor source is configured, start polling it and push
+        // its real readings into the simulated PSCs' sensors.
+        if let Some(source) = config.real_sensor_source.clone() {
+            let targets =
+                pscs.iter().map(|psc| psc.sensor_update_sender()).collect();
+            redfish::spawn(source, log.clone(), targets);
         }
 
         Ok(Self { sidecars, gimlets, pscs, tasks })
